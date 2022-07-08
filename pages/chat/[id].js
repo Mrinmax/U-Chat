@@ -7,22 +7,55 @@ import {
   Input,
   Text,
 } from "@chakra-ui/react";
+import Head from "next/head";
+import { useRouter } from "next/router";
 import Sidebar from "../../components/Sidebar";
+import {
+  useCollectionData,
+  useDocumentData,
+} from "react-firebase-hooks/firestore";
+import {
+  collection,
+  doc,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { auth, db } from "../../firebaseconfig";
+import { useAuthState } from "react-firebase-hooks/auth";
+import getOtherEmail from "../../utils/getOtherEmail";
+import { useState, useRef, useEffect } from "react";
 
-const Topbar = () => {
+const Topbar = ({ email }) => {
   return (
     <Flex bg="blue.50" h="75px" w="100%" align="center" p={5}>
       <Avatar src="" marginEnd={3} />
-      <Heading size="lg">user@gmail.com</Heading>
+      <Heading size="lg">{email}</Heading>
     </Flex>
   );
 };
 
-const Bottombar = () => {
+const Bottombar = ({ id, user }) => {
+  const [input, setInput] = useState("");
+
+  const sendMessage = async () => {
+    e.preventDefault();
+    await addDoc(collection(db, `chats/${id}/messages`), {
+      text: input,
+      sender: user.email,
+      timestamp: serverTimestamp(),
+    });
+    setInput("");
+  };
   return (
-    <FormControl p={3}>
-      <Input placeholder="Type message" />
-      <Button type="submit" hidden autoComplete="off">
+    <FormControl onSubmit={sendMessage} as="form" p={3}>
+      <Input
+        onChange={(e) => setInput(e.target.value)}
+        value={input}
+        placeholder="Type message"
+        autoComplete="off"
+      />
+      <Button type="submit" hidden>
         Submit
       </Button>
     </FormControl>
@@ -30,11 +63,56 @@ const Bottombar = () => {
 };
 
 export default function Chat() {
+  const router = useRouter();
+  const { id } = router.query;
+  const [user] = useAuthState(auth);
+
+  const q = query(collection(db, `chats/${id}/messages`), orderBy("timestamp"));
+  const [messages] = useCollectionData(q);
+
+  const [chat] = useDocumentData(doc(db, "chats", id));
+  // const bottomofChat = useRef();
+
+  const getMessages = () => {
+    messages?.map((msg) => {
+      const sender = msg.sender === user.email;
+      return (
+        <Flex
+          alignSelf={sender ? "flex-start" : "flex-end"}
+          key={Math.random()}
+          bg={sender ? "blue.50" : "green.50"}
+          w="fit-content"
+          minWidth="10px"
+          borderRadius="lg"
+          p={3}
+          m={1}
+        >
+          <Text>{msg.text}</Text>
+        </Flex>
+      );
+    });
+  };
+
+  // useEffect(
+  //   () =>
+  //     setTimeout(
+  //       bottomofChat.current.scrollIntoView({
+  //         behavior: "smooth",
+  //         block: "start",
+  //       }),
+  //       100
+  //     ),
+  //   [messages]
+  // );
+
   return (
     <Flex h="100vh">
+      <Head>
+        <title>U Chat</title>
+      </Head>
       <Sidebar />
       <Flex flex={1} direction="column">
-        <Topbar />
+        <Topbar email={getOtherEmail(chat?.users, user)} />
         <Flex
           flex={1}
           direction="column"
@@ -47,155 +125,10 @@ export default function Chat() {
             },
           }}
         >
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="blue.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
-          <Flex
-            bg="green.50"
-            w="fit-content"
-            minWidth="10px"
-            borderRadius="lg"
-            p={3}
-            m={1}
-            alignSelf="flex-end"
-          >
-            <Text>This is a dummy messsage</Text>
-          </Flex>
+          {getMessages()}
+          {/* <div ref={bottomofChat}></div> */}
         </Flex>
-        <Bottombar />
+        <Bottombar id={id} user={user} />
       </Flex>
     </Flex>
   );
